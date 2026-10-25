@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Skin questions | Skin Check</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;600;700&family=Marcellus&family=Young+Serif&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="hero hero-small">
+    <div class="wrap">
+      <nav class="topbar">
+        <a class="brand" href="/">Skin <span>Check</span></a>
+        <div class="nav-actions">
+          <a class="pill ghost" href="/">Back to home</a>
+        </div>
+      </nav>
+      <h1>Skin questions</h1>
+      <p>Six quick questions. No photo and no account. Your answers shape the same morning and night routine.</p>
+    </div>
+  </header>
+
+  <main class="wrap">
+      <form id="quiz" class="start quiz">
+      <fieldset class="about">
+        <legend>Two things first, optional</legend>
+        <label><input type="checkbox" id="sensitive"> My skin is sensitive</label>
+        <label><input type="checkbox" id="pregnant"> I'm pregnant or breastfeeding</label>
+        <p>These only change your routine. They aren't saved.</p>
+      </fieldset>
+    </form>
+    <div id="advice"></div>
+ <p id="save-note" class="sub"></p>
+    <p class="note">These answers are self-reported, not measured. Cosmetic guidance only, not medical advice. See a dermatologist for anything painful, changing or slow to clear.</p>
+  </main>
+
+  <script src="advice.js"></script>
+  <script src="questions.js"></script>
+</body>
+</html>

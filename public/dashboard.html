@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dashboard | Skin Check</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;600;700&family=Marcellus&family=Young+Serif&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="hero hero-small">
+    <div class="wrap">
+      <nav class="topbar">
+        <a class="brand" href="/">Skin <span>Check</span></a>
+        <div class="nav-actions">
+          <span class="avatar" id="avatar" aria-hidden="true"></span>
+          <span id="who"></span>
+          <button id="logout" class="pill ghost">Log out</button>
+        </div>
+      </nav>
+      <h1>Your skin over time</h1>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <p id="msg" role="status"></p>
+
+    <section class="start">
+      <div id="stats" class="stats"></div>
+      <a class="cta" href="/">New skin check</a>
+     <a class="cta alt" href="questions.html">Answer questions instead</a>
+    </section>
+
+    <section class="block">
+      <h2>What changed</h2>
+      <div id="changes"></div>
+    </section>
+
+    <section class="block">
+      <h2>Your checks</h2>
+      <div id="history"></div>
+    </section>
+
+    <section class="block">
+  <section class="block">
+      <h2>Your skin questions</h2>
+      <div id="quizzes"></div>
+    </section>
+      <h2>Your account</h2>
+      <p class="sub">Deleting your account removes your email and every saved check. Your photos were never stored here.</p>
+      <button id="delete" class="danger">Delete my account</button>
+    </section>
+  </main>
+
+  <script src="advice.js"></script>
+  <script src="dashboard.js"></script>
+</body>
+</html>

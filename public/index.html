@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Skin Check</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+ <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;600;700&family=Marcellus&family=Young+Serif&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+  <header class="hero">
+    <div class="wrap">     
+            <nav class="topbar">
+        <a class="brand" href="/">Skin <span>Check</span></a>
+        <div id="nav-out" class="nav-actions">
+          <a class="pill ghost" href="account.html#login">Log in</a>
+          <a class="pill solid" href="account.html#signup">Sign up</a>
+        </div>
+        <div id="nav-in" class="nav-actions" hidden>
+          <span class="avatar" id="avatar" aria-hidden="true"></span>
+          <span id="who"></span>
+          <a class="pill solid" href="dashboard.html">Dashboard</a>
+          <button id="logout" class="pill ghost">Log out</button>
+        </div>
+      </nav>
+
+      <h1>See what your skin needs next</h1>
+      <p>Take a selfie. Get 12 skin readings and a simple morning and night routine built around your weakest areas.</p>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <section class="start">
+     <p id="gate" class="gate">Log in or create an account to run a skin check. <a href="account.html">Log in or sign up</a><br>No account? <a href="questions.html">Answer six questions</a> or <a href="/?sample">see a sample result</a>.</p>
+      <label class="consent">
+        <input type="checkbox" id="consent">
+        <span>I'm 18 or older and agree to send my photo to YouCam's AI service for skin analysis. This site doesn't store the photo. YouCam may keep uploaded images for up to 30 days.</span>
+      </label>
+       <fieldset class="about">
+        <legend>About you, optional</legend>
+        <label><input type="checkbox" id="sensitive"> My skin is sensitive</label>
+        <label><input type="checkbox" id="pregnant"> I'm pregnant or breastfeeding</label>
+        <p>These only change your routine. They aren't saved.</p>
+      </fieldset>
+      <div class="actions">
+        <button id="start">Start camera</button>
+        <label class="upload">
+          <input type="file" id="upload" accept="image/jpeg,image/png">
+          Upload a photo instead
+        </label>
+      </div>
+      <p class="tips">Face a window or lamp, keep your forehead clear and fill the oval with your face.</p>
+       <p class="tips">Prefer not to use the camera? <a href="questions.html">Answer six skin questions instead</a>.</p>
+    </section>
+
+    <p id="status" role="status"></p>
+    <div id="YMK-module"></div>
+     <p id="sample-note" class="gate" hidden>This is a sample with made-up numbers, so you can see what a check looks like. Log in to run your own.</p>
+     <section id="progress" class="block"></section>
+  <section id="results-section">
+      <h2>Your skin readings</h2>
+      <p class="sub">Weakest first. Each marker shows where you sit between needs care and strong.</p>
+      <div id="results"></div>
+    </section>
+
+    <div id="advice"></div>
+
+    <p class="note">Cosmetic guidance only, not medical advice. See a dermatologist for anything painful, changing or slow to clear.</p>
+  </main>
+
+    <script src="advice.js"></script>
+  <script src="progress.js"></script>
+  <script src="app.js"></script>
+  <script src="https://plugins-media.makeupar.com/v2.5-camera-kit/sdk.js"></script>
+</body>
+</html>

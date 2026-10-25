@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Account | Skin Check</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;600;700&family=Marcellus&family=Young+Serif&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="hero hero-small">
+    <div class="wrap">
+ <a class="brand" href="/">Skin <span>Check</span></a>
+      <h1 id="view-title">Log in</h1>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <section class="start auth">
+      <p id="msg" role="status"></p>
+
+      <form id="form-login">
+        <label>Email <input type="email" name="email" autocomplete="email" required></label>
+        <label>Password <input type="password" name="password" autocomplete="current-password" required></label>
+        <button type="submit">Log in</button>
+        <p class="alt"><a href="#forgot">Forgot your password?</a></p>
+        <p class="alt">New here? <a href="#signup">Create an account</a></p>
+      </form>
+
+      <form id="form-signup" hidden>
+        <label>Email <input type="email" name="email" autocomplete="email" required></label>
+        <label>Password, at least 8 characters <input type="password" name="password" autocomplete="new-password" minlength="8" required></label>
+        <label>Confirm password <input type="password" name="confirm" autocomplete="new-password" minlength="8" required></label>
+        <button type="submit">Create account</button>
+        <p class="alt">Already have an account? <a href="#login">Log in</a></p>
+      </form>
+
+      <form id="form-forgot" hidden>
+        <label>Email <input type="email" name="email" autocomplete="email" required></label>
+        <button type="submit">Send reset link</button>
+        <p class="alt"><a href="#login">Back to log in</a></p>
+      </form>
+
+      <form id="form-reset" hidden>
+        <label>New password, at least 8 characters <input type="password" name="password" autocomplete="new-password" minlength="8" required></label>
+        <label>Confirm new password <input type="password" name="confirm" autocomplete="new-password" minlength="8" required></label>
+        <button type="submit">Save new password</button>
+      </form>
+    </section>
+  </main>
+
+  <script src="account.js"></script>
+</body>
+</html>

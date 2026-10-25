@@ -1,0 +1,5 @@
+node_modules
+.env
+app.db
+app.db-wal
+app.db-shm

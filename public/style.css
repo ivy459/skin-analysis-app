@@ -1,0 +1,850 @@
+/* ==========================================================
+   Skin Check styles
+   1. Tokens          2. Base            3. Hero and top bar
+   4. Start panel     5. Notices, camera 6. Readings
+   7. Advice          8. Account pages   9. Accessibility, responsive
+   ========================================================== */
+
+
+/* ---------- 1. Tokens ---------- */
+:root {
+  /* Color */
+  --plum: #2b1230;
+  --ink: #241426;
+  --muted: #6b5b6e;
+  --milk: #f7f4f6;
+  --paper: #ffffff;
+  --line: #e3dce4;
+  --notice: #fff7e3;
+  --hibiscus: #c8284f;
+  --hibiscus-dark: #a81f40;
+  --clay: #b5402e;
+  --marigold: #f0b22e;
+  --leaf: #2f8a5f;
+  --leaf-dark: #236b49;
+
+  /* Type */
+  --font-display: "Young Serif", Georgia, serif;
+  --font-body: Figtree, system-ui, -apple-system, "Segoe UI", sans-serif;
+   --font-brand: Marcellus, "Trajan Pro", Georgia, serif;
+}
+
+
+/* ---------- 2. Base ---------- */
+* {
+  box-sizing: border-box;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+body {
+  margin: 0;
+  background: var(--milk);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 1.0625rem;
+  line-height: 1.55;
+}
+
+.wrap {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+main {
+  padding-bottom: 56px;
+}
+
+h1,
+h2,
+h3 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 400;
+  line-height: 1.1;
+}
+
+h2 {
+  font-size: 1.6rem;
+}
+
+.note {
+  margin-top: 28px;
+  font-size: 0.875rem;
+  color: var(--muted);
+}
+
+
+/* ---------- 3. Hero and top bar ---------- */
+.hero {
+  padding: 48px 0 84px;
+  background: var(--plum);
+  color: var(--milk);
+}
+
+.hero-small {
+  padding-bottom: 76px;
+}
+
+.hero h1 {
+  max-width: 14ch;
+  font-size: clamp(2.1rem, 8vw, 3.2rem);
+}
+
+.hero p {
+  max-width: 34ch;
+  margin: 16px 0 0;
+  font-size: 1.125rem;
+  color: var(--milk);
+}
+
+.topbar {
+ flex-wrap: wrap;
+  row-gap: 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding-bottom: 32px;
+}
+
+.brand {
+  font-family: var(--font-brand);
+  font-size: 1.75rem;
+  font-weight: 400;
+  letter-spacing: 0.18em;
+  line-height: 1;
+  text-transform: uppercase;
+  text-decoration: none;
+  color: var(--milk);
+}
+
+.brand span {
+  color: var(--marigold);
+}
+
+.hero .wrap > .brand {
+  display: inline-block;
+  margin-bottom: 24px;
+}
+
+
+.nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.pill {
+  display: inline-block;
+  padding: 8px 18px;
+  border-radius: 999px;
+  font: inherit;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  line-height: 1.2;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.pill.ghost {
+  background: transparent;
+  color: var(--milk);
+  border: 1.5px solid rgba(247, 244, 246, 0.55);
+}
+
+.pill.ghost:hover {
+  background: rgba(247, 244, 246, 0.12);
+  border-color: var(--milk);
+}
+
+.pill.solid {
+  background: var(--milk);
+  color: var(--plum);
+  border: 1.5px solid var(--milk);
+}
+
+.pill.solid:hover {
+  background: #fff;
+}
+
+.avatar {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--marigold);
+  color: var(--plum);
+  font-weight: 700;
+}
+
+#who {
+  max-width: 18ch;
+  overflow: hidden;
+  font-size: 0.9375rem;
+  color: #e6d9e8;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+
+/* ---------- 4. Start panel ---------- */
+.start {
+  margin-top: -48px;
+  padding: 20px;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  box-shadow: 0 14px 32px -16px rgba(43, 18, 48, 0.45);
+}
+
+.consent {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  margin: 0 0 18px;
+  font-size: 0.9375rem;
+  color: var(--muted);
+}
+
+.consent input {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  margin: 2px 0 0;
+  accent-color: var(--hibiscus);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+}
+
+button {
+  padding: 14px 28px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--hibiscus);
+  color: #fff;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+button:hover {
+  background: var(--hibiscus-dark);
+}
+
+button:active {
+  transform: scale(0.98);
+}
+
+.upload {
+  position: relative;
+  display: inline-block;
+  padding: 12px 22px;
+  border: 2px solid var(--plum);
+  border-radius: 999px;
+  color: var(--plum);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.upload input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  opacity: 0;
+}
+
+button:disabled,
+.upload:has(input:disabled) {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.tips {
+  margin: 16px 0 0;
+  font-size: 0.9375rem;
+  color: var(--muted);
+}
+
+
+/* ---------- 5. Notices and camera ---------- */
+#status,
+#msg,
+.gate {
+  padding: 12px 16px;
+  background: var(--notice);
+  border-left: 4px solid var(--marigold);
+  border-radius: 4px 12px 12px 4px;
+}
+
+#status {
+  margin: 20px 0 0;
+}
+
+#msg,
+.gate {
+  margin: 0 0 16px;
+}
+
+#status:empty,
+#msg:empty {
+  display: none;
+}
+
+.gate a {
+  font-weight: 700;
+  color: var(--hibiscus-dark);
+}
+
+#YMK-module {
+  max-width: 540px;
+  margin: 20px auto 0;
+  border-radius: 18px;
+  overflow: hidden;
+}
+
+
+/* ---------- 6. Readings ---------- */
+#results-section {
+  margin-top: 40px;
+}
+
+#results-section:has(#results:empty) {
+  display: none;
+}
+
+.sub {
+  margin: 6px 0 16px;
+  font-size: 0.9375rem;
+  color: var(--muted);
+}
+
+.reading {
+  padding: 14px 0;
+}
+
+.reading-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.name {
+  font-weight: 600;
+}
+
+.val {
+  font-size: 0.9375rem;
+  color: var(--muted);
+}
+
+.val strong {
+  margin-right: 8px;
+  font-family: var(--font-display);
+  font-size: 1.35rem;
+  font-weight: 400;
+  color: var(--ink);
+}
+
+.reading.needs .val {
+  font-weight: 700;
+  color: var(--clay);
+}
+
+.meter {
+  position: relative;
+  height: 10px;
+  border-radius: 999px;
+  background: linear-gradient(
+    90deg,
+    var(--clay) 0%,
+    var(--clay) 64%,
+    var(--marigold) 72%,
+    var(--marigold) 80%,
+    var(--leaf) 88%,
+    var(--leaf) 100%
+  );
+}
+
+.marker {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 20px;
+  height: 20px;
+  border: 3px solid var(--paper);
+  border-radius: 50%;
+  background: var(--plum);
+  box-shadow: 0 0 0 1px var(--plum);
+  transform: translate(-50%, -50%);
+  transition: left 0.9s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+
+/* ---------- 7. Advice ---------- */
+#advice {
+  margin-top: 44px;
+}
+
+#advice h2:not(:first-child) {
+  margin-top: 36px;
+}
+
+#advice h3 {
+  margin: 22px 0 8px;
+  font-size: 1.2rem;
+}
+
+#advice .tip {
+  margin: 16px 0;
+  padding: 2px 0 2px 16px;
+  border-left: 4px solid var(--clay);
+}
+
+#advice .tip strong {
+  font-size: 1.05rem;
+}
+
+#advice .tip p {
+  margin: 4px 0 0;
+  color: var(--muted);
+}
+
+#advice ol {
+  margin: 0;
+  padding: 4px 18px;
+  list-style: none;
+  counter-reset: step;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+}
+
+#advice li {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  padding: 12px 0;
+  counter-increment: step;
+}
+
+#advice li + li {
+  border-top: 1px solid var(--line);
+}
+
+#advice li::before {
+  content: counter(step);
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--plum);
+  color: var(--milk);
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+
+/* Only used if you added product details (products.js) */
+#advice li img {
+  flex: none;
+}
+
+#advice li > div {
+  display: flex;
+  flex-direction: column;
+}
+
+.step-name {
+  font-weight: 600;
+}
+
+.step-meta {
+  font-size: 0.875rem;
+  color: var(--muted);
+}
+
+
+/* ---------- 8. Account pages ---------- */
+.auth form {
+  display: grid;
+  gap: 16px;
+}
+
+.auth label {
+  display: grid;
+  gap: 6px;
+  font-weight: 600;
+}
+
+.auth input {
+  padding: 12px 14px;
+  border: 1.5px solid var(--line);
+  border-radius: 12px;
+  background: var(--paper);
+  font: inherit;
+}
+
+.auth input:focus-visible {
+  border-color: var(--plum);
+  outline: 3px solid var(--marigold);
+  outline-offset: 2px;
+}
+
+.alt {
+  margin: 0;
+  font-size: 0.9375rem;
+  color: var(--muted);
+}
+
+.alt a {
+  font-weight: 700;
+  color: var(--hibiscus-dark);
+}
+
+
+/* ---------- 9. Accessibility and responsive ---------- */
+:is(button, a.pill, .consent input):focus-visible,
+.upload:has(input:focus-visible) {
+  outline: 3px solid var(--marigold);
+  outline-offset: 3px;
+}
+
+@media (max-width: 520px) {
+  #who {
+    display: none;
+  }
+
+  .brand {
+    font-size: 1.3rem;
+    letter-spacing: 0.12em;
+  }
+
+  .pill {
+    padding: 7px 14px;
+  }
+}
+/* ---------- 10. Dashboard ---------- */
+.block {
+  margin-top: 40px;
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.stat strong {
+  font-family: var(--font-display);
+  font-size: 1.7rem;
+  font-weight: 400;
+  line-height: 1.1;
+}
+
+.stat span {
+  font-size: 0.875rem;
+  color: var(--muted);
+}
+
+.cta {
+  display: inline-block;
+  margin-top: 20px;
+  padding: 14px 28px;
+  border-radius: 999px;
+  background: var(--hibiscus);
+  color: #fff;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.cta:hover {
+  background: var(--hibiscus-dark);
+}
+
+.change {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 2px 14px;
+  align-items: baseline;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.change .name {
+  font-weight: 600;
+}
+
+.change .arrow,
+.change .delta {
+  font-variant-numeric: tabular-nums;
+}
+
+.change .arrow {
+  color: var(--muted);
+}
+
+.change .delta {
+  font-weight: 700;
+}
+
+.change .verdict {
+  grid-column: 1 / -1;
+  font-size: 0.875rem;
+  color: var(--muted);
+}
+
+.change.better .delta,
+.change.better .verdict {
+  color: var(--leaf-dark);
+}
+
+.change.worse .delta,
+.change.worse .verdict {
+  color: var(--clay);
+}
+
+.check {
+  border-bottom: 1px solid var(--line);
+}
+
+.check summary {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 14px 32px 14px 0;
+  list-style: none;
+  cursor: pointer;
+}
+
+.check summary::-webkit-details-marker {
+  display: none;
+}
+
+.check summary::after {
+  content: "+";
+  position: absolute;
+  top: 10px;
+  right: 4px;
+  font-size: 1.5rem;
+  color: var(--hibiscus);
+}
+
+.check[open] summary::after {
+  content: "\2212";
+}
+
+.check summary:focus-visible {
+  outline: 3px solid var(--marigold);
+  outline-offset: 2px;
+}
+
+.check .weak {
+  font-size: 0.9375rem;
+  color: var(--muted);
+}
+
+.check-scores {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 6px 24px;
+  padding: 0 0 16px;
+}
+
+.mini {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.9375rem;
+}
+
+.danger {
+  background: transparent;
+  color: var(--clay);
+  border: 2px solid var(--clay);
+}
+
+.danger:hover {
+  background: var(--clay);
+  color: #fff;
+}
+/* ---------- 11. Skin questions and sample ---------- */
+#sample-note {
+  margin-top: 24px;
+}
+
+.quiz {
+  display: grid;
+  gap: 24px;
+}
+
+.quiz fieldset {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.quiz legend {
+  margin-bottom: 4px;
+  padding: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+.choice {
+  position: relative;
+  display: block;
+  margin-top: 8px;
+  cursor: pointer;
+}
+
+.choice input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+
+.choice span {
+  display: block;
+  padding: 12px 16px;
+  border: 1.5px solid var(--line);
+  border-radius: 12px;
+  background: var(--paper);
+}
+
+.choice:hover span {
+  border-color: var(--plum);
+}
+
+.choice input:checked + span {
+  border-color: var(--plum);
+  background: var(--plum);
+  color: var(--milk);
+  font-weight: 600;
+}
+
+.choice input:focus-visible + span {
+  outline: 3px solid var(--marigold);
+  outline-offset: 2px;
+}
+/* ---------- 12. About you ---------- */
+.about {
+  margin: 0 0 18px;
+  padding: 0;
+  border: 0;
+}
+
+.about legend {
+  margin-bottom: 8px;
+  padding: 0;
+  font-weight: 700;
+}
+
+.about label {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-top: 8px;
+}
+
+.about input {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  accent-color: var(--hibiscus);
+}
+
+.about input:focus-visible {
+  outline: 3px solid var(--marigold);
+  outline-offset: 3px;
+}
+
+.about p {
+  margin: 10px 0 0;
+  font-size: 0.875rem;
+  color: var(--muted);
+}
+/* ---------- 13. Saved answers ---------- */
+.tips a {
+  font-weight: 700;
+  color: var(--hibiscus-dark);
+}
+
+.cta.alt {
+  background: transparent;
+  color: var(--plum);
+  border: 2px solid var(--plum);
+  padding: 12px 26px;
+}
+
+.cta.alt:hover {
+  background: var(--plum);
+  color: var(--milk);
+}
+
+.cta + .cta {
+  margin-left: 10px;
+}
+
+.quiz-change {
+  margin-bottom: 8px;
+  padding: 12px 16px;
+  background: var(--notice);
+  border-left: 4px solid var(--marigold);
+  border-radius: 4px 12px 12px 4px;
+}
+
+.quiz-change p {
+  margin: 4px 0 0;
+}
+
+.quiz-row {
+  padding: 14px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.chip {
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: var(--notice);
+  font-size: 0.875rem;
+}
+/* ---------- 14. Progress on the results page ---------- */
+#progress:empty {
+  display: none;
+}
+
+.progress-summary {
+  margin: 8px 0 0;
+  font-weight: 700;
+}

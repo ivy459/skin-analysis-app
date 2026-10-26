@@ -41,33 +41,40 @@ async function checkPassword(password, stored) {
   return crypto.timingSafeEqual(actual, expected);
 }
 
-function startSession(res, userId) {
+async function startSession(res, userId) {
   const now = Date.now();
-  db.prepare("DELETE FROM sessions WHERE expires_at < ?").run(now);
-  db.prepare("DELETE FROM reset_tokens WHERE expires_at < ?").run(now);
+  await db.run("DELETE FROM sessions WHERE expires_at < ?", [now]);
+  await db.run("DELETE FROM reset_tokens WHERE expires_at < ?", [now]);
 
   const token = newToken();
-  db.prepare("INSERT INTO sessions (token_hash, user_id, expires_at) VALUES (?, ?, ?)")
-    .run(sha256(token), userId, now + SESSION_MS);
+  await db.run(
+    "INSERT INTO sessions (token_hash, user_id, expires_at) VALUES (?, ?, ?)",
+    [sha256(token), userId, now + SESSION_MS]
+  );
   res.cookie(COOKIE, token, { ...COOKIE_OPTS, maxAge: SESSION_MS });
 }
 
-function currentUser(req) {
+async function currentUser(req) {
   const token = req.cookies?.[COOKIE];
   if (!token) return null;
-  const row = db.prepare(`
-    SELECT users.id AS id, users.email AS email
-    FROM sessions JOIN users ON users.id = sessions.user_id
-    WHERE sessions.token_hash = ? AND sessions.expires_at > ?
-  `).get(sha256(token), Date.now());
-  return row ? { id: row.id, email: row.email } : null;
+  const row = await db.get(
+    `SELECT users.id AS id, users.email AS email
+     FROM sessions JOIN users ON users.id = sessions.user_id
+     WHERE sessions.token_hash = ? AND sessions.expires_at > ?`,
+    [sha256(token), Date.now()]
+  );
+  return row ? { id: Number(row.id), email: String(row.email) } : null;
 }
 
-function requireUser(req, res, next) {
-  const user = currentUser(req);
-  if (!user) return res.status(401).json({ error: "Log in to run a skin check." });
-  req.user = user;
-  next();
+async function requireUser(req, res, next) {
+  try {
+    const user = await currentUser(req);
+    if (!user) return res.status(401).json({ error: "Log in to run a skin check." });
+    req.user = user;
+    next();
+  } catch (err) {
+    next(err);
+  }
 }
 
 const authLimiter = rateLimit({
@@ -86,13 +93,17 @@ router.post("/signup", authLimiter, wrap(async (req, res) => {
 
   if (!validEmail(email)) return res.status(400).json({ error: "Enter a valid email address." });
   if (!validPassword(password)) return res.status(400).json({ error: "Use a password of 8 to 128 characters." });
-  if (db.prepare("SELECT 1 FROM users WHERE email = ?").get(email)) {
+
+  const exists = await db.get("SELECT 1 AS x FROM users WHERE email = ?", [email]);
+  if (exists) {
     return res.status(409).json({ error: "An account with this email already exists. Log in or reset your password." });
   }
 
-  const info = db.prepare("INSERT INTO users (email, password_hash) VALUES (?, ?)")
-    .run(email, await hashPassword(password));
-  startSession(res, Number(info.lastInsertRowid));
+  const info = await db.run(
+    "INSERT INTO users (email, password_hash) VALUES (?, ?)",
+    [email, await hashPassword(password)]
+  );
+  await startSession(res, Number(info.lastInsertRowid));
   res.json({ email });
 }));
 
@@ -101,41 +112,43 @@ router.post("/login", authLimiter, wrap(async (req, res) => {
   const email = cleanEmail(body.email);
   const password = String(body.password ?? "");
 
-  const user = db.prepare("SELECT id, email, password_hash FROM users WHERE email = ?").get(email);
+  const user = await db.get("SELECT id, email, password_hash FROM users WHERE email = ?", [email]);
   const ok = await checkPassword(password, user?.password_hash || DUMMY_HASH);
   if (!user || !user.password_hash || !ok) {
     return res.status(401).json({ error: "Email or password is wrong." });
   }
 
-  startSession(res, user.id);
-  res.json({ email: user.email });
+  await startSession(res, Number(user.id));
+  res.json({ email: String(user.email) });
 }));
 
-router.post("/logout", (req, res) => {
+router.post("/logout", wrap(async (req, res) => {
   const token = req.cookies?.[COOKIE];
-  if (token) db.prepare("DELETE FROM sessions WHERE token_hash = ?").run(sha256(token));
+  if (token) await db.run("DELETE FROM sessions WHERE token_hash = ?", [sha256(token)]);
   res.clearCookie(COOKIE, COOKIE_OPTS);
   res.json({ ok: true });
-});
+}));
 
-router.get("/me", (req, res) => {
+router.get("/me", wrap(async (req, res) => {
   res.set("Cache-Control", "no-store");
-  res.json({ user: currentUser(req) });
-});
+  res.json({ user: await currentUser(req) });
+}));
 
 router.post("/forgot", authLimiter, wrap(async (req, res) => {
   const email = cleanEmail(req.body?.email);
   const user = validEmail(email)
-    ? db.prepare("SELECT id, email FROM users WHERE email = ?").get(email)
+    ? await db.get("SELECT id, email FROM users WHERE email = ?", [email])
     : null;
 
   if (user) {
     const token = newToken();
-    db.prepare("DELETE FROM reset_tokens WHERE user_id = ?").run(user.id);
-    db.prepare("INSERT INTO reset_tokens (token_hash, user_id, expires_at) VALUES (?, ?, ?)")
-      .run(sha256(token), user.id, Date.now() + RESET_MS);
+    await db.run("DELETE FROM reset_tokens WHERE user_id = ?", [user.id]);
+    await db.run(
+      "INSERT INTO reset_tokens (token_hash, user_id, expires_at) VALUES (?, ?, ?)",
+      [sha256(token), user.id, Date.now() + RESET_MS]
+    );
     try {
-      await sendResetEmail(user.email, `${BASE_URL}/account.html#reset=${token}`);
+      await sendResetEmail(String(user.email), `${BASE_URL}/account.html#reset=${token}`);
     } catch (err) {
       console.error("Reset email failed:", err.message);
     }
@@ -152,15 +165,18 @@ router.post("/reset", authLimiter, wrap(async (req, res) => {
 
   if (!validPassword(password)) return res.status(400).json({ error: "Use a password of 8 to 128 characters." });
 
-  const row = db.prepare("SELECT user_id FROM reset_tokens WHERE token_hash = ? AND expires_at > ?")
-    .get(sha256(token), Date.now());
+  const row = await db.get(
+    "SELECT user_id FROM reset_tokens WHERE token_hash = ? AND expires_at > ?",
+    [sha256(token), Date.now()]
+  );
   if (!row) return res.status(400).json({ error: "This reset link is invalid or has expired. Request a new one." });
 
-  db.prepare("UPDATE users SET password_hash = ? WHERE id = ?").run(await hashPassword(password), row.user_id);
-  db.prepare("DELETE FROM reset_tokens WHERE user_id = ?").run(row.user_id);
-  db.prepare("DELETE FROM sessions WHERE user_id = ?").run(row.user_id);
+  const userId = Number(row.user_id);
+  await db.run("UPDATE users SET password_hash = ? WHERE id = ?", [await hashPassword(password), userId]);
+  await db.run("DELETE FROM reset_tokens WHERE user_id = ?", [userId]);
+  await db.run("DELETE FROM sessions WHERE user_id = ?", [userId]);
 
-  startSession(res, row.user_id);
+  await startSession(res, userId);
   res.json({ ok: true });
 }));
 

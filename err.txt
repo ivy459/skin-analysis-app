@@ -1,0 +1,15 @@
+﻿node : C:\Users\m\OneDrive\Desktop\skin analysis app\server.js:273
+At line:1 char:1
++ node --check server.js 2>&1 | Out-File err.txt -Encoding utf8; Get-Co ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (C:\Users\m\OneD...p\server.js:273:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+const express = require("express");
+      ^
+
+SyntaxError: Identifier 'express' has already been declared
+    at wrapSafe (node:internal/modules/cjs/loader:1900:18)
+    at checkSyntax (node:internal/main/check_syntax:88:3)
+
+Node.js v26.12.0

@@ -10,16 +10,21 @@ app.set("trust proxy", 1);
 app.use(express.json({ limit: "10mb" }));
 app.use(cookieParser());
 app.use(express.static("public"));
-app.use("/api/auth", authRouter);
 
 const API = "https://yce-api-01.makeupar.com/s2s/v2.0";
 const authHeaders = {
   Authorization: `Bearer ${process.env.YOUCAM_API_KEY}`,
   "Content-Type": "application/json",
 };
-const DAILY_LIMIT = Number(process.env.DAILY_LIMIT) || 5;
+
+const DAY = 24 * 60 * 60 * 1000;
+const DAILY_LIMIT = Number(process.env.DAILY_LIMIT) || 5;               // scans per account per day
+const GLOBAL_DAILY_LIMIT = Number(process.env.GLOBAL_DAILY_LIMIT) || 10; // scans per day, all accounts
+const SCAN_BUDGET = Number(process.env.SCAN_BUDGET) || 50;               // scans in total, all accounts
 const DEMO_EMAIL = (process.env.DEMO_EMAIL || "").trim().toLowerCase();
+
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const route = (fn) => (req, res, next) => fn(req, res, next).catch(next);
 
 const analyzeLimiter = rateLimit({
   windowMs: 10 * 60 * 1000,
@@ -38,18 +43,66 @@ async function yc(path, options = {}) {
   return j;
 }
 
-app.get("/api/health", (req, res) => {
-  res.json({ ok: true, keyLoaded: Boolean(process.env.YOUCAM_API_KEY) });
+// ---------- Demo account for judges, created on the first API request if missing ----------
+let demoReady = null;
+function ensureDemoAccount() {
+  if (!demoReady) {
+    demoReady = (async () => {
+      const password = process.env.DEMO_PASSWORD || "";
+      if (!DEMO_EMAIL || !password) return;
+      const found = await db.get("SELECT 1 AS x FROM users WHERE email = ?", [DEMO_EMAIL]);
+      if (!found) {
+        await db.run(
+          "INSERT INTO users (email, password_hash) VALUES (?, ?)",
+          [DEMO_EMAIL, await hashPassword(password)]
+        );
+        console.log("Demo account created:", DEMO_EMAIL);
+      }
+    })().catch((err) => {
+      demoReady = null;
+      console.error("Demo account setup failed:", err.message);
+    });
+  }
+  return demoReady;
+}
+
+app.use("/api", async (req, res, next) => {
+  await ensureDemoAccount();
+  next();
+});
+
+app.use("/api/auth", authRouter);
+
+app.get("/api/health", async (req, res) => {
+  let dbOk = false;
+  try {
+    await db.get("SELECT 1 AS ok");
+    dbOk = true;
+  } catch (err) {
+    console.error("Database check failed:", err.message);
+  }
+  res.json({ ok: true, keyLoaded: Boolean(process.env.YOUCAM_API_KEY), dbOk });
 });
 
 // ---------- Face scan ----------
 app.post("/api/analyze", requireUser, analyzeLimiter, async (req, res) => {
   try {
-    const since = Date.now() - 24 * 60 * 60 * 1000;
-    const { n } = db.prepare("SELECT COUNT(*) AS n FROM checks WHERE user_id = ? AND created_at > ?")
-      .get(req.user.id, since);
-    if (n >= DAILY_LIMIT) {
+    const since = Date.now() - DAY;
+
+    const mine = await db.get(
+      "SELECT COUNT(*) AS n FROM checks WHERE user_id = ? AND created_at > ?",
+      [req.user.id, since]
+    );
+    if (Number(mine.n) >= DAILY_LIMIT) {
       return res.status(429).json({ error: `You've used your ${DAILY_LIMIT} checks for today. Come back tomorrow.` });
+    }
+
+    const today = await db.get("SELECT COUNT(*) AS n FROM checks WHERE created_at > ?", [since]);
+    const total = await db.get("SELECT COUNT(*) AS n FROM checks");
+    if (Number(total.n) >= SCAN_BUDGET || Number(today.n) >= GLOBAL_DAILY_LIMIT) {
+      return res.status(429).json({
+        error: "This demo has reached its scan limit, which protects its free credits. The sample result and the six skin questions still work, with no scan needed.",
+      });
     }
 
     const image = req.body?.image;
@@ -103,16 +156,21 @@ app.post("/api/analyze", requireUser, analyzeLimiter, async (req, res) => {
           .filter((o) => Number.isFinite(o.raw_score))
           .map(({ type, raw_score }) => ({ type, raw_score }));
 
-        const prev = db.prepare(
-          "SELECT created_at, scores FROM checks WHERE user_id = ? ORDER BY created_at DESC LIMIT 1"
-        ).get(req.user.id);
+        const prev = await db.get(
+          "SELECT created_at, scores FROM checks WHERE user_id = ? ORDER BY created_at DESC LIMIT 1",
+          [req.user.id]
+        );
 
-        db.prepare("INSERT INTO checks (user_id, created_at, scores) VALUES (?, ?, ?)")
-          .run(req.user.id, Date.now(), JSON.stringify(scores));
+        await db.run(
+          "INSERT INTO checks (user_id, created_at, scores) VALUES (?, ?, ?)",
+          [req.user.id, Date.now(), JSON.stringify(scores)]
+        );
 
         return res.json({
           ...p.data,
-          previous: prev ? { createdAt: prev.created_at, scores: JSON.parse(prev.scores) } : null,
+          previous: prev
+            ? { createdAt: Number(prev.created_at), scores: JSON.parse(String(prev.scores)) }
+            : null,
         });
       }
 
@@ -129,61 +187,69 @@ app.post("/api/analyze", requireUser, analyzeLimiter, async (req, res) => {
 });
 
 // ---------- Dashboard data ----------
-app.get("/api/history", requireUser, (req, res) => {
-  const rows = db.prepare(
-    "SELECT id, created_at, scores FROM checks WHERE user_id = ? ORDER BY created_at DESC LIMIT 50"
-  ).all(req.user.id);
+app.get("/api/history", requireUser, route(async (req, res) => {
+  const rows = await db.all(
+    "SELECT id, created_at, scores FROM checks WHERE user_id = ? ORDER BY created_at DESC LIMIT 50",
+    [req.user.id]
+  );
+  const quizRows = await db.all(
+    "SELECT id, created_at, scores FROM quiz_checks WHERE user_id = ? ORDER BY created_at DESC LIMIT 20",
+    [req.user.id]
+  );
+  const mine = await db.get(
+    "SELECT COUNT(*) AS n FROM checks WHERE user_id = ? AND created_at > ?",
+    [req.user.id, Date.now() - DAY]
+  );
 
-  const quizRows = db.prepare(
-    "SELECT id, created_at, scores FROM quiz_checks WHERE user_id = ? ORDER BY created_at DESC LIMIT 20"
-  ).all(req.user.id);
-
-  const since = Date.now() - 24 * 60 * 60 * 1000;
-  const { n } = db.prepare("SELECT COUNT(*) AS n FROM checks WHERE user_id = ? AND created_at > ?")
-    .get(req.user.id, since);
+  const shape = (r) => ({ id: Number(r.id), createdAt: Number(r.created_at), scores: JSON.parse(String(r.scores)) });
 
   res.set("Cache-Control", "no-store");
   res.json({
     email: req.user.email,
-    checks: rows.map((r) => ({ id: r.id, createdAt: r.created_at, scores: JSON.parse(r.scores) })),
-    quizzes: quizRows.map((r) => ({ id: r.id, createdAt: r.created_at, scores: JSON.parse(r.scores) })),
-    usedToday: n,
+    checks: rows.map(shape),
+    quizzes: quizRows.map(shape),
+    usedToday: Number(mine.n),
     dailyLimit: DAILY_LIMIT,
   });
-});
+}));
 
 // ---------- Saved skin-question answers ----------
 const QUIZ_TYPES = ["pore", "moisture", "dark_circle_v2", "oiliness", "redness", "acne", "texture", "radiance"];
 
-app.post("/api/quiz", requireUser, (req, res) => {
+app.post("/api/quiz", requireUser, route(async (req, res) => {
   const raw = Array.isArray(req.body?.scores) ? req.body.scores : [];
   const valid = raw
     .filter((s) => QUIZ_TYPES.includes(s?.type) && [48, 62].includes(s?.raw_score))
     .map(({ type, raw_score }) => ({ type, raw_score }));
   const scores = [...new Map(valid.map((s) => [s.type, s])).values()];
 
-  const since = Date.now() - 24 * 60 * 60 * 1000;
-  const { n } = db.prepare("SELECT COUNT(*) AS n FROM quiz_checks WHERE user_id = ? AND created_at > ?")
-    .get(req.user.id, since);
-  if (n >= 10) return res.status(429).json({ error: "Too many saved answers today. Try again tomorrow." });
+  const recent = await db.get(
+    "SELECT COUNT(*) AS n FROM quiz_checks WHERE user_id = ? AND created_at > ?",
+    [req.user.id, Date.now() - DAY]
+  );
+  if (Number(recent.n) >= 10) {
+    return res.status(429).json({ error: "Too many saved answers today. Try again tomorrow." });
+  }
 
-  db.prepare("INSERT INTO quiz_checks (user_id, created_at, scores) VALUES (?, ?, ?)")
-    .run(req.user.id, Date.now(), JSON.stringify(scores));
+  await db.run(
+    "INSERT INTO quiz_checks (user_id, created_at, scores) VALUES (?, ?, ?)",
+    [req.user.id, Date.now(), JSON.stringify(scores)]
+  );
   res.json({ ok: true });
-});
+}));
 
 // ---------- Delete account ----------
-app.delete("/api/account", requireUser, (req, res) => {
+app.delete("/api/account", requireUser, route(async (req, res) => {
   if (DEMO_EMAIL && req.user.email === DEMO_EMAIL) {
     return res.status(403).json({ error: "The demo account can't be deleted." });
   }
 
   const id = req.user.id;
-  db.prepare("DELETE FROM checks WHERE user_id = ?").run(id);
-  db.prepare("DELETE FROM quiz_checks WHERE user_id = ?").run(id);
-  db.prepare("DELETE FROM sessions WHERE user_id = ?").run(id);
-  db.prepare("DELETE FROM reset_tokens WHERE user_id = ?").run(id);
-  db.prepare("DELETE FROM users WHERE id = ?").run(id);
+  await db.run("DELETE FROM checks WHERE user_id = ?", [id]);
+  await db.run("DELETE FROM quiz_checks WHERE user_id = ?", [id]);
+  await db.run("DELETE FROM sessions WHERE user_id = ?", [id]);
+  await db.run("DELETE FROM reset_tokens WHERE user_id = ?", [id]);
+  await db.run("DELETE FROM users WHERE id = ?", [id]);
 
   res.clearCookie("sid", {
     httpOnly: true,
@@ -191,22 +257,16 @@ app.delete("/api/account", requireUser, (req, res) => {
     secure: process.env.NODE_ENV === "production",
   });
   res.json({ ok: true });
-});
-
-// ---------- Demo account for judges, created at startup if missing ----------
-(async () => {
-  const password = process.env.DEMO_PASSWORD || "";
-  if (!DEMO_EMAIL || !password || typeof hashPassword !== "function") return;
-  if (!db.prepare("SELECT 1 FROM users WHERE email = ?").get(DEMO_EMAIL)) {
-    db.prepare("INSERT INTO users (email, password_hash) VALUES (?, ?)")
-      .run(DEMO_EMAIL, await hashPassword(password));
-    console.log("Demo account created:", DEMO_EMAIL);
-  }
-})().catch((err) => console.error("Demo account failed:", err.message));
+}));
 
 app.use((err, req, res, next) => {
   console.error(err);
   res.status(500).json({ error: "Something went wrong. Please try again." });
 });
 
-app.listen(3000, () => console.log("Running on http://localhost:3000"));
+// Run a local server only when started with "node server.js". Hosts like Vercel import the app instead.
+if (require.main === module) {
+  app.listen(process.env.PORT || 3000, () => console.log("Running on http://localhost:3000"));
+}
+
+module.exports = app;

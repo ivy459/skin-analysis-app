@@ -1,15 +1,18 @@
 require("dotenv").config();
+const path = require("path");
 const express = require("express");
 const cookieParser = require("cookie-parser");
 const rateLimit = require("express-rate-limit");
 const db = require("./db");
 const { router: authRouter, requireUser, hashPassword } = require("./auth");
-
 const app = express();
 app.set("trust proxy", 1);
 app.use(express.json({ limit: "10mb" }));
 app.use(cookieParser());
-app.use(express.static("public"));
+app.use(express.static(path.join(__dirname, "public")));
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "index.html"));
+});
 
 const API = "https://yce-api-01.makeupar.com/s2s/v2.0";
 const authHeaders = {

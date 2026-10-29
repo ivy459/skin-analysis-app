@@ -218,7 +218,7 @@ if (uploadInput) {
   uploadInput.addEventListener("change", (e) => {
     const file = e.target.files[0];
     if (!file) return;
-    const reader = new FilehReader();
+    const reader = new FileReader();
     reader.onload = () => runAnalysis(reader.result);
     reader.readAsDataURL(file);
   });

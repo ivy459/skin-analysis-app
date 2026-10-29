@@ -100,6 +100,146 @@ function stepItem(step) {
   return li;
 }
 
+// ---------- Shop your routine ----------
+const SHOP = {
+  "Gentle cleanser": "gentle cleanser",
+  "Moisturizer": "moisturizer ceramides",
+  "Oil-free gel moisturizer": "oil free gel moisturizer",
+  "Sunscreen SPF 30+": "sunscreen SPF 30 broad spectrum",
+  "Niacinamide serum": "niacinamide serum",
+  "Hyaluronic acid serum": "hyaluronic acid serum",
+  "Vitamin C serum": "vitamin C serum",
+  "Eye cream (caffeine or vitamin C)": "caffeine eye cream",
+  "Calming serum (centella or azelaic acid)": "centella serum",
+  "Salicylic acid on breakouts": "salicylic acid spot treatment",
+  "Gentle AHA/BHA exfoliant, 1-2 nights a week": "AHA BHA exfoliant low strength",
+  "Retinol, start 2 nights a week": "retinol serum low strength",
+  "Peptide serum": "peptide serum",
+};
+
+const BASICS = new Set(["Gentle cleanser", "Moisturizer", "Oil-free gel moisturizer", "Sunscreen SPF 30+"]);
+
+// Plain search links. No affiliate codes, no product is endorsed.
+const STORES = [
+  { name: "Jumia", url: (q) => "https://www.jumia.co.ke/catalog/?q=" + encodeURIComponent(q) },
+  { name: "Amazon", url: (q) => "https://www.amazon.com/s?k=" + encodeURIComponent(q) },
+  { name: "Google Shopping", url: (q) => "https://www.google.com/search?tbm=shop&q=" + encodeURIComponent(q) },
+];
+
+function shopItems(concerns, opts) {
+  const items = new Map();
+  ["AM", "PM"].forEach((time) => {
+    routine(concerns, time, opts).forEach((step) => {
+      const base = step.replace(" (fragrance-free)", "");
+      let query = SHOP[base];
+      if (!query) return; // for example the cold compress needs no product
+      if (opts.sensitive && step.includes("(fragrance-free)")) query += " fragrance free";
+      if (!items.has(base)) items.set(base, { name: base, query, times: new Set(), basic: BASICS.has(base) });
+      items.get(base).times.add(time);
+    });
+  });
+  return [...items.values()];
+}
+
+function timeLabel(times) {
+  if (times.has("AM") && times.has("PM")) return "Morning + night";
+  return times.has("AM") ? "Morning" : "Night";
+}
+
+function renderShop(box, concerns, opts) {
+  const items = shopItems(concerns, opts);
+  if (items.length === 0) return;
+
+  const section = el("section", null, "shop");
+  section.append(el("h2", "Shop your routine"));
+  section.append(el("p", "Tick what you already own. Each link opens a search for that product type, so you pick the brand and price that suit you.", "sub"));
+
+  const summary = el("p", null, "shop-count");
+  const have = new Set();
+
+  const toBuy = () => items.filter((i) => !have.has(i.name));
+  const listText = () =>
+    "My skin routine shopping list:\n" + toBuy().map((i) => "- " + i.name).join("\n");
+
+  const whatsapp = el("a", "Send on WhatsApp", "pill shop-btn");
+  whatsapp.target = "_blank";
+  whatsapp.rel = "noopener noreferrer";
+  const copy = el("button", "Copy list", "pill shop-btn");
+  copy.type = "button";
+
+  function refresh() {
+    const n = toBuy().length;
+    summary.textContent = n === 0 ? "You already own everything on this list." : `${n} to buy`;
+    whatsapp.href = "https://wa.me/?text=" + encodeURIComponent(listText());
+    copy.disabled = n === 0;
+    whatsapp.classList.toggle("disabled", n === 0);
+  }
+
+  copy.addEventListener("click", async () => {
+    try {
+      await navigator.clipboard.writeText(listText());
+      copy.textContent = "Copied";
+    } catch {
+      copy.textContent = "Copy not available";
+    }
+    setTimeout(() => (copy.textContent = "Copy list"), 2000);
+  });
+
+  function group(title, list) {
+    if (list.length === 0) return;
+    section.append(el("h3", title));
+    const ul = el("ul", null, "shop-list");
+    list.forEach((item) => {
+      const li = el("li", null, "shop-item");
+
+      const check = document.createElement("input");
+      check.type = "checkbox";
+      check.addEventListener("change", () => {
+        if (check.checked) have.add(item.name);
+        else have.delete(item.name);
+        li.classList.toggle("have", check.checked);
+        refresh();
+      });
+      const owned = el("label", null, "shop-have");
+      owned.append(check, el("span", "I have this"));
+
+      const head = el("div", null, "shop-head");
+      head.append(el("strong", item.name), el("span", timeLabel(item.times), "badge"));
+
+      const body = el("div", null, "shop-body");
+      body.append(head);
+      const tip = LABEL_TIPS[item.name];
+      if (tip) body.append(el("span", tip, "step-meta"));
+
+      const stores = el("div", null, "stores");
+      STORES.forEach((s) => {
+        const a = el("a", s.name);
+        a.href = s.url(item.query);
+        a.target = "_blank";
+        a.rel = "noopener noreferrer";
+        a.setAttribute("aria-label", `Search ${s.name} for ${item.name}`);
+        stores.append(a);
+      });
+      body.append(stores);
+
+      li.append(body, owned);
+      ul.append(li);
+    });
+    section.append(ul);
+  }
+
+  group("Start with the basics", items.filter((i) => i.basic));
+  group("Targeted for your focus areas", items.filter((i) => !i.basic));
+
+  const actions = el("div", null, "shop-actions");
+  actions.append(summary, copy, whatsapp);
+  section.append(actions);
+  section.append(el("p", "Prices and stock come from each store. We do not sell products or earn from these links.", "note"));
+
+  refresh();
+  box.append(section);
+}
+
 function renderAdvice(output) {
   lastOutput = output;
   const opts = flags();
@@ -116,6 +256,7 @@ function renderAdvice(output) {
   if (weakest.length === 0) {
     box.append(el("h2", "Looking good"));
     box.append(el("p", "Nothing stands out. Keep up a gentle cleanser, moisturizer and daily sunscreen."));
+    renderShop(box, [], opts);
     return;
   }
 
@@ -138,20 +279,22 @@ function renderAdvice(output) {
   }
 
   box.append(el("h2", "Your routine"));
- box.append(el("p", "Not sure what to buy? Each step says what to look for on the label.", "sub"));
+  box.append(el("p", "Not sure what to buy? Each step says what to look for on the label.", "sub"));
   ["AM", "PM"].forEach((time) => {
     box.append(el("h3", time === "AM" ? "Morning" : "Night"));
     const ol = document.createElement("ol");
-   routine(weakest, time, opts).forEach((s) => ol.append(stepItem(s)));
+    routine(weakest, time, opts).forEach((s) => ol.append(stepItem(s)));
     box.append(ol);
   });
+
+  renderShop(box, weakest, opts);
 
   box.append(el("p", "Add one new active product at a time and patch test first. Don't use retinol and exfoliating acids on the same night. Skip retinol if you are pregnant. This is cosmetic guidance, not medical advice.", "note"));
 }
 
 // Re-draw the advice when a tick-box changes
 ["sensitive", "pregnant"].forEach((id) => {
-  document.getElementById(id)?.addEventListener("change", () => {
+  document.getElementById(id)?.addEventListener("change", () =>{
     if (lastOutput) renderAdvice(lastOutput);
   });
 });

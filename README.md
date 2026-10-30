@@ -2,6 +2,7 @@
 
 A web app that analyses a person's skin from a face scan and turns the results into a personalised skincare routine. Built for the **YouCam API Skin AI & eCommerce VTO Hackathon** (Perfect Corp, Devpost), Skin AI track.
 
+**Live app:** https://skin-analysis-app-virid.vercel.app
 **Author:** Ivy Sweeny (Yvonne Nyaboke Bosire), Computer Science, Kisii University, Kenya
 **GitHub:** [Ivy459](https://github.com/Ivy459)
 
@@ -48,7 +49,7 @@ No camera, or don't want a scan? Answer a short **skin-type questionnaire** inst
 6. Dashboard added: stats, changes between scans, history, account deletion.
 7. Sample result page added.
 8. Full local test passed, including a real scan.
-9. Project pushed to a private GitHub repo (`Ivy459/skin-analysis-app`).
+9. Project pushed to GitHub (`Ivy459/skin-analysis-app`).
 10. Database moved to Turso; sign up, login, questionnaire and reset link verified on it.
 11. Deployed to Vercel.
 
@@ -74,10 +75,9 @@ Set these in `.env` locally and in your Vercel project settings when deployed. N
 
 `.env.example` lists the exact names.
 
-## Status and next steps
+## Status
 
-- **Done:** scan, scores, advice, consent, questionnaire, email accounts, dashboard, sample result, Turso, Vercel deployment.
-
+**Done:** scan, scores, advice, consent, questionnaire, email accounts, dashboard, sample result, Turso, Vercel deployment.
 
 ## Privacy
 
